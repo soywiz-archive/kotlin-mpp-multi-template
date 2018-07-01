@@ -1,0 +1,23 @@
+rootProject.name = 'kotlin-mpp-multi-template'
+
+enableFeaturePreview('GRADLE_METADATA')
+
+include ":lib1-js"
+include ":lib1-jvm"
+include ":lib1-native"
+include ":lib1-common"
+
+include ":exe1-js"
+include ":exe1-jvm"
+include ":exe1-native"
+include ":exe1-common"
+
+findProject(":lib1-js")?.projectDir = file("lib1/js")
+findProject(":lib1-jvm")?.projectDir = file("lib1/jvm")
+findProject(":lib1-native")?.projectDir = file("lib1/native")
+findProject(":lib1-common")?.projectDir = file("lib1")
+
+findProject(":exe1-js")?.projectDir = file("exe1/js")
+findProject(":exe1-jvm")?.projectDir = file("exe1/jvm")
+findProject(":exe1-native")?.projectDir = file("exe1/native")
+findProject(":exe1-common")?.projectDir = file("exe1")

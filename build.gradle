@@ -1,0 +1,103 @@
+buildscript {
+    ext.nativeTargets = ['macbook']
+    ext.libDependencies = [
+            "exe1": ["lib1"]
+    ]
+
+    repositories {
+        mavenLocal()
+        jcenter()
+        maven { url "https://plugins.gradle.org/m2/" }
+        maven { url "https://dl.bintray.com/jetbrains/kotlin-native-dependencies" }
+        maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+        //classpath "org.jetbrains.kotlin:kotlin-native-gradle-plugin:$kotlinNativeVersion"
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
+    }
+}
+
+
+subprojects {
+    repositories {
+        mavenLocal()
+        jcenter()
+        mavenCentral()
+        maven { url "https://plugins.gradle.org/m2/" }
+        maven { url "https://dl.bintray.com/jetbrains/kotlin-native-dependencies" }
+        maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
+    }
+
+    def isJvm = project.name.endsWith("-jvm")
+    def isJs = project.name.endsWith("-js")
+    def isNative = project.name.endsWith("-native")
+    def isCommon = project.name.endsWith("-common")
+    def isKotlin = isJvm || isJs || isNative || isCommon
+    String suffix = ""
+    String projectNameWithoutSuffix = project.name[0 ..< project.name.lastIndexOf('-')]
+
+    if (isJs) {
+        suffix = "-js"
+        apply plugin: 'kotlin-platform-js'
+
+        [compileKotlin2Js, compileTestKotlin2Js]*.configure {
+            kotlinOptions.moduleKind = "umd"
+            kotlinOptions.sourceMap = true
+        }
+        dependencies {
+            compile "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlinVersion"
+        }
+    }
+
+    if (isJvm) {
+        suffix = "-jvm"
+        apply plugin: 'kotlin-platform-jvm'
+        dependencies {
+            compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+        }
+    }
+
+    if (isCommon) {
+        suffix = "-common"
+        apply plugin: 'kotlin-platform-common'
+        dependencies {
+            compile "org.jetbrains.kotlin:kotlin-stdlib-common:$kotlinVersion"
+        }
+    }
+
+    //if (isNative) {
+    //    suffix = "-native"
+    //    apply plugin: 'kotlin-platform-native'
+    //    dependencies {
+    //        compile "org.jetbrains.kotlin:kotlin-stdlib-native:$kotlinVersion"
+    //    }
+    //}
+
+    if (isKotlin && !isNative) {
+        sourceSets {
+            main.kotlin.srcDirs += "src"
+            main.resources.srcDirs += "resources"
+            test.kotlin.srcDirs += "test"
+            test.resources.srcDirs += "testresources"
+        }
+    }
+
+    if (isKotlin && !isNative) {
+        dependencies {
+            if (!isCommon) {
+                def expect = ":${projectNameWithoutSuffix}-common"
+                expectedBy project(expect)
+                //println("EXP: ${project.name}: ${expect}")
+            }
+
+            def deps = libDependencies[projectNameWithoutSuffix]
+
+            for (dep in deps) {
+                def depm = ":${dep}${suffix}"
+                compile project(":${depm}")
+                //println("DEP: ${project.name}: ${depm}")
+            }
+        }
+    }
+}
