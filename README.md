@@ -1,4 +1,2 @@
 Kotlin Multiplatform Multimodule Template
 =========================================
-
-
