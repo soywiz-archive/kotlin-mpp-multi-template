@@ -1,1 +1,1 @@
-kotlin-mpp-multi-template
+Kotlin Multiplatform Multimodule Template
